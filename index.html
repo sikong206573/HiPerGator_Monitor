@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a111d">
+  <meta name="description" content="HiPerGator 科研组资源监控面板，查看 CPU、内存配额及 Slurm 排队原因。">
+  <title>Resource Lens · qi855292.ucf</title>
+  <style>
+    :root{color-scheme:dark;--bg:#080e18;--panel:#111a2a;--panel2:#152032;--line:#27334a;--muted:#8d9bb0;--text:#edf3fb;--cyan:#5fdec8;--blue:#82a7ff;--amber:#ffbe75;--red:#ff8e93;--navy:#0c1421}
+    *{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",-apple-system,BlinkMacSystemFont,"Noto Sans SC",sans-serif;background:radial-gradient(circle at 84% -14%,#1b3651 0,transparent 34%),var(--bg);color:var(--text);font-size:14px;line-height:1.5}
+    button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}a{color:inherit;text-decoration:none}
+    .shell{max-width:1580px;min-height:100vh;margin:auto;display:grid;grid-template-columns:236px minmax(0,1fr)}
+    .side{background:#0b1321;border-right:1px solid #202d40;padding:32px 21px;display:flex;flex-direction:column;gap:41px}
+    .brand{display:flex;gap:11px;align-items:center}.mark{width:35px;height:35px;border:1px solid #568b93;display:grid;place-items:center;border-radius:10px;background:#162e38;color:var(--cyan);font-weight:800;font-size:16px;letter-spacing:-3px;padding-right:3px}.brand strong{display:block;font-size:16px;letter-spacing:-.5px}.brand small{display:block;color:var(--muted);font-size:10px;letter-spacing:1.8px}
+    .nav-label{font-size:10px;font-weight:700;letter-spacing:2px;color:#62748c;padding:0 14px;margin-bottom:12px}.nav a{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:10px;color:#9ba9bb;margin:3px 0;font-weight:550}.nav a:hover,.nav a.active{background:#17283b;color:#eaf8fb}.nav a.active{box-shadow:inset 3px 0 var(--cyan)}.nav svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8}
+    .account-card{margin-top:auto;border:1px solid #283a4b;border-radius:15px;padding:18px;background:linear-gradient(140deg,#162a36,#102031)}.account-card .tiny{font-size:10px;letter-spacing:1.5px;color:#92a4b8}.account-name{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:14px;font-weight:700;color:#d8f5f0;margin:7px 0 13px;overflow-wrap:anywhere}.privacy{color:#aebdcd;font-size:11px;border-top:1px solid #2b4050;padding-top:12px}
+    main{padding:37px clamp(24px,4.2vw,68px) 60px;min-width:0}.topline{display:flex;justify-content:space-between;align-items:center;gap:20px}.eyebrow{font-size:11px;letter-spacing:2.2px;color:var(--cyan);font-weight:800}.top-actions{display:flex;gap:9px;align-items:center}.pill{border:1px solid #38566a;border-radius:100px;padding:7px 11px;display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;color:#c1ebdf;background:#112b33}.pill.warn{color:#ffce95;border-color:#5c4938;background:#2c2420}.pill.error{color:#ff999d;border-color:#75404a;background:#3b2028}.dot{width:7px;height:7px;background:currentColor;border-radius:50%;box-shadow:0 0 0 3px #ffffff12}.ghost{border:1px solid #334359;border-radius:10px;color:#d5dfef;background:#162236;padding:9px 12px}.ghost:hover{background:#21334b}.ghost:disabled{opacity:.5;cursor:wait}
+    h1{font-size:clamp(27px,3.15vw,43px);letter-spacing:-1.7px;line-height:1.14;margin:19px 0 10px;font-weight:750}.sub{color:#a3b2c5;max-width:620px;font-size:14px;margin:0}.meta{margin-top:24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;color:#8596ac;font-size:12px}.meta strong{color:#b8c5d5;font-weight:600}.meta .sep{width:1px;height:15px;background:#38465a}
+    .notice{margin:28px 0 18px;background:linear-gradient(100deg,#263321,#182b32);border:1px solid #4d624b;border-radius:12px;padding:12px 15px;color:#dceccf;font-size:12px;display:flex;gap:10px;align-items:flex-start}.notice.is-hidden{display:none}.notice svg{flex:none;width:16px;height:16px}
+    .section-header{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:32px 0 14px}.section-header h2{font-size:17px;letter-spacing:-.3px;margin:0}.section-header p{font-size:12px;color:var(--muted);margin:0}.section-header small{color:#8596aa;font-size:11px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px}.stat{background:linear-gradient(155deg,#172234,#111a28);border:1px solid #2b394b;border-radius:17px;padding:20px;min-height:174px;position:relative;overflow:hidden}.stat:before{content:"";height:3px;width:50px;position:absolute;top:0;left:22px;background:var(--accent,var(--cyan));border-radius:0 0 8px 8px}.stat-top{display:flex;justify-content:space-between;align-items:center;color:#a5b4c6;font-size:12px}.stat .symbol{font-size:18px;color:var(--accent,var(--cyan))}.stat .main-value{font-size:clamp(29px,2.7vw,42px);font-weight:750;line-height:1.1;letter-spacing:-1.6px;margin-top:27px;white-space:nowrap}.stat .main-value span{font-size:15px;font-weight:500;color:#8496ac;letter-spacing:0}.stat .foot{font-size:11px;color:#93a2b6;margin-top:12px}.bar{height:6px;background:#2a3546;border-radius:20px;overflow:hidden;margin-top:15px}.bar-fill{height:100%;background:var(--accent,var(--cyan));border-radius:20px;transition:width .5s}
+    .twocol{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(280px,.85fr);gap:16px}.panel{background:linear-gradient(160deg,#121d2d,#111a29);border:1px solid #28374b;border-radius:17px;padding:22px;min-width:0}.panel-top{display:flex;align-items:start;justify-content:space-between;gap:10px}.panel h3{font-size:15px;letter-spacing:-.2px;margin:0}.panel .caption{color:#8c9db2;font-size:11px;margin:4px 0 0}.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11px;color:#b5c0d0}.legend span:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--c);margin-right:7px}
+    .chart-wrap{height:226px;margin:18px 0 2px}.chart-wrap svg{width:100%;height:100%;display:block}.axis{fill:#7b8ea6;font-size:10px}.gridline{stroke:#2a3a4d;stroke-width:1;stroke-dasharray:3 5}.chart-empty{height:100%;display:flex;align-items:center;justify-content:center;color:#8293a6;border:1px dashed #34445a;border-radius:12px;text-align:center;padding:15px}
+    .qos-list{display:grid;gap:18px;margin-top:27px}.qos-line .head{display:flex;justify-content:space-between;gap:12px;margin-bottom:9px;font-size:12px}.qos-line .head span{color:#a8b8ca}.qos-line .head strong{font-size:12px}.qos-progress{height:9px;background:#29384c;border-radius:20px;overflow:hidden}.qos-progress i{display:block;height:100%;border-radius:20px;background:var(--fill);transition:width .5s}.qos-foot{font-size:11px;color:#8295ac;margin-top:8px}.soft-note{font-size:11px;color:#94a6bc;background:#172535;padding:12px;border-radius:9px;margin-top:20px}
+    .queue-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.table-wrap{overflow:auto}.queue{width:100%;border-collapse:collapse;text-align:left;min-width:510px}.queue th{font-size:10px;color:#8495aa;font-weight:700;letter-spacing:1.2px;padding:16px 9px;border-bottom:1px solid #334156}.queue td{font-size:12px;color:#b3c0d0;padding:15px 9px;border-bottom:1px solid #263549}.queue tr:last-child td{border-bottom:0}.queue td:first-child{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#e0e8f5}.count{font-weight:750;color:#f1f5fb}.status{display:inline-block;border-radius:6px;background:#342d27;color:#ffce93;font-size:11px;padding:4px 8px}.status.normal{background:#263749;color:#9bb8ef}.status.problem{background:#43272d;color:#ff9ba4}.empty-queue{color:#91a0b2;font-size:12px;padding:24px 4px}
+    .guide{margin-top:22px;display:flex;gap:14px;align-items:flex-start;background:linear-gradient(95deg,#142d30,#152336);border:1px solid #2b4e54;border-radius:15px;padding:17px 20px}.guide b{color:#def5ed}.guide p{font-size:12px;color:#a5bdc6;margin:5px 0 0}.guide code{background:#102026;color:#74e0c9;padding:2px 5px;border-radius:4px}.guide .ic{flex:none;color:var(--cyan);font-size:21px}
+    footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;border-top:1px solid #28354a;margin-top:35px;padding-top:18px;color:#677b94;font-size:11px}footer a{color:#93bece}
+    @media(max-width:1140px){.shell{grid-template-columns:80px minmax(0,1fr)}.side{padding:30px 12px}.brand{justify-content:center}.brand div:last-child,.nav-label,.nav a span,.account-card{display:none}.nav a{justify-content:center}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:720px){.shell{display:block}.side{height:68px;flex-direction:row;align-items:center;padding:13px 20px;border-right:0;border-bottom:1px solid #202d40;gap:15px}.brand div:last-child{display:block}.nav{display:none}main{padding:26px 18px 45px}.topline{align-items:flex-start}.top-actions{gap:6px}.ghost{padding:7px}.stats,.twocol{grid-template-columns:1fr}.stats{gap:10px}.stat{min-height:145px}.stat .main-value{margin-top:14px}.meta{gap:10px}.meta .sep{display:none}.panel{padding:18px}.chart-wrap{height:200px}.section-header{align-items:flex-start}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="side">
+    <div class="brand"><div class="mark">H/</div><div><strong>RESOURCE LENS</strong><small>HIPERGATOR MONITOR</small></div></div>
+    <nav class="nav" aria-label="页面导航">
+      <div class="nav-label">WORKSPACE</div>
+      <a class="active" href="#overview"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>资源总览</span></a>
+      <a href="#history"><svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 3 7-8"/><path d="M15 6h5v5"/></svg><span>使用趋势</span></a>
+      <a href="#queue"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span>排队诊断</span></a>
+    </nav>
+    <div class="account-card"><div class="tiny">SLURM ACCOUNT</div><div class="account-name">qi855292.ucf</div><div class="privacy">◈ 仅显示科研组聚合数据<br>不上传组员姓名或作业内容</div></div>
+  </aside>
+  <main id="overview">
+    <div class="topline"><span class="eyebrow">RESEARCH COMPUTING / STATUS</span><div class="top-actions"><span id="mode" class="pill warn"><i class="dot"></i>示例模式</span><button id="reload" class="ghost" type="button" title="重新检查数据文件">↻ 刷新</button></div></div>
+    <h1>计算资源，一目了然<span style="color:var(--cyan)">.</span></h1>
+    <p class="sub">UCF Research Group · HiPerGator 实时配额、占用趋势与 Slurm 排队原因。</p>
+    <div class="meta"><span>资源账户 <strong>qi855292.ucf</strong></span><span class="sep"></span><span>最后采集 <strong id="updated">尚未连接</strong></span><span class="sep"></span><span>数据来源 <strong>UFRC / Slurm</strong></span></div>
+    <div class="notice" id="notice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg><span id="notice-text">当前显示演示数据。运行采集脚本并发布 data/latest.json 后会自动读取真实数据。</span></div>
+
+    <section aria-labelledby="alloc-title"><div class="section-header"><div><h2 id="alloc-title">Investment QOS 配额</h2><p>高优先级组内资源池 · 根据 Slurm 资源申请量计算占用</p></div><small id="capacity-tag">ALLOCATION</small></div>
+      <div class="stats">
+        <article class="stat" style="--accent:var(--cyan)"><div class="stat-top"><span>CPU 核心</span><span class="symbol">◉</span></div><div class="main-value"><strong id="cpu-used">—</strong> <span>/ <span id="cpu-total">—</span> 核</span></div><div class="bar"><div class="bar-fill" id="cpu-bar"></div></div><div class="foot" id="cpu-remaining">—</div></article>
+        <article class="stat" style="--accent:var(--blue)"><div class="stat-top"><span>内存配额</span><span class="symbol">▤</span></div><div class="main-value"><strong id="mem-used">—</strong> <span>/ <span id="mem-total">—</span> GB</span></div><div class="bar"><div class="bar-fill" id="mem-bar"></div></div><div class="foot" id="mem-remaining">—</div></article>
+        <article class="stat" style="--accent:var(--amber)"><div class="stat-top"><span>GPU 配额</span><span class="symbol">⌗</span></div><div class="main-value"><strong id="gpu-total">—</strong> <span>张</span></div><div class="bar"><div class="bar-fill" id="gpu-bar"></div></div><div class="foot" id="gpu-note">来源：Allocation Summary</div></article>
+        <article class="stat" style="--accent:var(--red)"><div class="stat-top"><span>排队中的作业</span><span class="symbol">◷</span></div><div class="main-value"><strong id="pending-total">—</strong> <span>个</span></div><div class="bar"><div class="bar-fill" id="pending-bar"></div></div><div class="foot" id="pending-note">统计该账户 Pending 任务</div></article>
+      </div>
+    </section>
+
+    <section id="history" class="twocol" style="margin-top:17px" aria-label="历史趋势和可用资源">
+      <article class="panel"><div class="panel-top"><div><h3>资源使用趋势</h3><p class="caption" id="history-label">历史快照 · Investment QOS</p></div><div class="legend"><span style="--c:var(--cyan)">CPU</span><span style="--c:var(--blue)">内存</span></div></div><div id="chart" class="chart-wrap" role="img" aria-label="CPU 与内存占用率随时间变化的折线图"></div></article>
+      <article class="panel"><div class="panel-top"><div><h3>当前可用容量</h3><p class="caption">运行中任务已占用的组内配额</p></div><span style="color:#7890a8">◫</span></div>
+        <div class="qos-list"><div class="qos-line"><div class="head"><span>CPU 空闲比例</span><strong id="cpu-free-pct">—</strong></div><div class="qos-progress"><i id="cpu-free-bar" style="--fill:var(--cyan)"></i></div><div class="qos-foot" id="cpu-free-detail">—</div></div><div class="qos-line"><div class="head"><span>内存空闲比例</span><strong id="mem-free-pct">—</strong></div><div class="qos-progress"><i id="mem-free-bar" style="--fill:var(--blue)"></i></div><div class="qos-foot" id="mem-free-detail">—</div></div></div>
+        <div class="soft-note" id="qos-note">Burst QOS 是另一个低优先级资源池；可用量和启动速度取决于集群空闲资源。</div>
+      </article>
+    </section>
+
+    <section id="queue"><div class="section-header"><div><h2>排队原因诊断</h2><p>仅汇总原因及任务数量，不显示用户名、任务 ID 或任务内容</p></div><small id="queue-hint">PENDING / ALL QOS</small></div>
+      <article class="panel"><div class="queue-head"><h3>Slurm Pending Reason</h3><span class="legend">按当前快照统计</span></div><div class="table-wrap"><table class="queue"><thead><tr><th>原因代码</th><th>解释</th><th>任务数量</th><th>分类</th></tr></thead><tbody id="reason-rows"></tbody></table></div><div class="empty-queue" id="empty-queue" hidden>当前没有排队任务。</div></article>
+    </section>
+
+    <aside class="guide"><span class="ic">◇</span><div><b>为什么 1 CPU + 32GB 也可能排队？</b><p>HiPerGator 分别限制 CPU 和内存：即使 CPU 尚有空闲，只要剩余内存不足 32 GB，任务仍可能显示 <code>QOSGrpMemLimit</code>。其他可能原因包括集群资源紧张和调度优先级。</p></div></aside>
+    <footer><span>RESOURCE LENS · HiPerGator group visibility</span><span>只读面板 · <a href="https://docs.rc.ufl.edu/scheduler/qos_limits/" target="_blank" rel="noopener noreferrer">UFRC 官方说明 ↗</a></span></footer>
+  </main>
+</div>
+<script>
+(() => {
+  'use strict';
+  const demo = {
+    schema_version:1, account:'qi855292.ucf', collected_at:'2026-11-02T16:00:00Z',
+    investment:{cpu_total:64,cpu_running:56,memory_total_gb:500,memory_running_gb:456,gpu_total:2},
+    burst:{cpu_running:12,memory_running_gb:80},
+    queue:{pending_total:7,reasons:[{reason:'QOSGrpMemLimit',count:4},{reason:'Priority',count:2},{reason:'Resources',count:1}]}
+  };
+  const demoHistory = Array.from({length:24},(_,i)=>({collected_at:new Date(Date.parse('2026-11-02T10:00:00Z')+i*15*60*1000).toISOString(),cpu_utilization_pct:Math.max(0,Math.min(100,54+i*1.3+Math.sin(i*.8)*9)),memory_utilization_pct:Math.max(0,Math.min(100,66+i*.9+Math.cos(i*.5)*6))}));
+  const $ = id => document.getElementById(id);
+  const pct=(a,b)=>b>0?Math.max(0,Math.min(100,100*a/b)):0;
+  const fmt=n=>Number.isFinite(Number(n))?Number(n).toLocaleString('zh-CN',{maximumFractionDigits:1}):'—';
+  const time=s=>{if(!s)return '未知';const d=new Date(s);return Number.isNaN(d.getTime())?'未知':d.toLocaleString('zh-CN',{hour12:false,timeZoneName:'short'});};
+  const reasonInfo={QOSGrpMemLimit:['组内内存配额耗尽','problem','组内限制'],QOSGrpCpuLimit:['组内 CPU 配额耗尽','problem','组内限制'],Resources:['集群或分区资源暂不可用','normal','集群资源'],Priority:['等待更高优先级任务','normal','调度优先级'],AssociationResourceLimit:['账户关联资源限制','problem','账户限制'],QOSGrpGRES:['组内 GPU 等资源配额耗尽','problem','组内限制'],Dependency:['依赖其他任务完成','normal','任务依赖']};
+  const asPct=(n)=>Math.round(n)+'%';
+  const setBar=(id,v)=>{$(id).style.width=asPct(Math.max(0,Math.min(100,v)));};
+  let mode='demo';
+  function drawChart(history){
+    const target=$('chart');target.replaceChildren();
+    if(!Array.isArray(history)||history.length<2){const el=document.createElement('div');el.className='chart-empty';el.textContent='暂无足够历史数据。采集两次后将自动显示使用趋势。';target.append(el);return;}
+    const width=660,height=225, left=38,right=15,top=14,bottom=32,plotW=width-left-right,plotH=height-top-bottom;
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox',`0 0 ${width} ${height}`);svg.setAttribute('preserveAspectRatio','none');
+    const el=(tag,attrs={},label)=>{const n=document.createElementNS('http://www.w3.org/2000/svg',tag);Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,String(v)));if(label!==undefined)n.textContent=label;svg.appendChild(n);return n;};
+    [0,25,50,75,100].forEach(v=>{const y=top+plotH*(1-v/100);el('line',{x1:left,x2:width-right,y1:y,y2:y,class:'gridline'});el('text',{x:0,y:y+4,class:'axis'},v+'%');});
+    const points=(k)=>history.map((d,i)=>`${left+i*plotW/(history.length-1)},${top+plotH*(1-Math.max(0,Math.min(100,Number(d[k])||0))/100)}`).join(' ');
+    el('polyline',{points:points('memory_utilization_pct'),fill:'none',stroke:'#82a7ff','stroke-width':3,'stroke-linejoin':'round','stroke-linecap':'round'});
+    el('polyline',{points:points('cpu_utilization_pct'),fill:'none',stroke:'#5fdec8','stroke-width':3,'stroke-linejoin':'round','stroke-linecap':'round'});
+    const indexes=[0,Math.floor((history.length-1)/2),history.length-1];indexes.forEach((index,ix)=>{const d=new Date(history[index].collected_at);if(!Number.isNaN(d.getTime()))el('text',{x:left+index*plotW/(history.length-1),y:height-6,'text-anchor':ix===0?'start':ix===2?'end':'middle',class:'axis'},d.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}));});
+    target.append(svg);
+  }
+  function render(snapshot,history,isDemo){
+    const a=snapshot.investment||{},q=snapshot.queue||{},cpuTotal=Number(a.cpu_total)||0,memTotal=Number(a.memory_total_gb)||0,cpuUsed=Number(a.cpu_running)||0,memUsed=Number(a.memory_running_gb)||0;
+    const cpuFree=Math.max(0,cpuTotal-cpuUsed),memFree=Math.max(0,memTotal-memUsed);
+    $('updated').textContent=isDemo?'无实时采集':time(snapshot.collected_at);
+    $('cpu-used').textContent=fmt(cpuUsed);$('cpu-total').textContent=fmt(cpuTotal);$('cpu-remaining').textContent=`剩余 ${fmt(cpuFree)} 核 · 使用率 ${fmt(pct(cpuUsed,cpuTotal))}%`;setBar('cpu-bar',pct(cpuUsed,cpuTotal));
+    $('mem-used').textContent=fmt(memUsed);$('mem-total').textContent=fmt(memTotal);$('mem-remaining').textContent=`剩余 ${fmt(memFree)} GB · 使用率 ${fmt(pct(memUsed,memTotal))}%`;setBar('mem-bar',pct(memUsed,memTotal));
+    $('gpu-total').textContent=a.gpu_total==null?'—':fmt(a.gpu_total);$('gpu-note').textContent='已用 GPU：当前采集格式未提供';setBar('gpu-bar',0);
+    $('pending-total').textContent=fmt(q.pending_total||0);$('pending-note').textContent=q.pending_total?'按原因分布见下方':'目前没有待调度作业';setBar('pending-bar',Math.min(100,Number(q.pending_total||0)*8));
+    $('cpu-free-pct').textContent=fmt(pct(cpuFree,cpuTotal))+'%';setBar('cpu-free-bar',pct(cpuFree,cpuTotal));$('cpu-free-detail').textContent=`可用 ${fmt(cpuFree)} / ${fmt(cpuTotal)} 核`;
+    $('mem-free-pct').textContent=fmt(pct(memFree,memTotal))+'%';setBar('mem-free-bar',pct(memFree,memTotal));$('mem-free-detail').textContent=`可用 ${fmt(memFree)} / ${fmt(memTotal)} GB`;
+    const burst=snapshot.burst||{};$('qos-note').textContent=`Burst QOS 当前运行中：${fmt(burst.cpu_running??0)} CPU，${fmt(burst.memory_running_gb??0)} GB 内存。Burst 使用集群闲置资源，启动时间不受保证。`;
+    const tbody=$('reason-rows');tbody.replaceChildren();const reasons=Array.isArray(q.reasons)?q.reasons:[];$('empty-queue').hidden=reasons.length>0;
+    reasons.forEach(item=>{const [meaning,cls,type]=reasonInfo[item.reason]||['其他 Slurm 原因','normal','其他'];const tr=document.createElement('tr');const cells=[item.reason,meaning,fmt(item.count),type];cells.forEach((val,i)=>{const td=document.createElement('td');if(i===2){const s=document.createElement('strong');s.className='count';s.textContent=val;td.append(s);}else if(i===3){const s=document.createElement('span');s.className='status '+cls;s.textContent=val;td.append(s);}else td.textContent=val;tr.append(td);});tbody.append(tr);});
+    drawChart(history);$('history-label').textContent=history.length?`${history.length} 个历史快照 · Investment QOS`:'等待历史快照 · Investment QOS';
+    const d=snapshot.collected_at?Date.now()-Date.parse(snapshot.collected_at):Infinity;const stale=Number.isFinite(d)&&d>30*60*1000;
+    $('mode').className='pill '+(isDemo?'warn':stale?'warn':'');$('mode').innerHTML='<i class="dot"></i>'+(isDemo?'演示模式':stale?'数据已过期':'真实快照');
+    if(isDemo){$('notice').classList.remove('is-hidden');$('notice-text').textContent='当前是内置示例数据，不代表 qi855292.ucf 的真实资源情况。部署 data/latest.json 后将显示真实快照。';}
+    else if(stale){$('notice').classList.remove('is-hidden');$('notice-text').textContent='最新数据距离现在已超过 30 分钟；采集任务可能延迟或停止运行，请检查更新流程。';}
+    else {$('notice').classList.add('is-hidden');}
+  }
+  async function getJson(url){const response=await fetch(url,{cache:'no-store'});if(!response.ok)throw new Error('HTTP '+response.status);return response.json();}
+  async function refresh(){const button=$('reload');button.disabled=true;button.textContent='载入中…';try{const latest=await getJson('data/latest.json');if(latest.schema_version!==1||latest.account!=='qi855292.ucf'||!latest.investment)throw Error('数据格式或账户不匹配');let history=[];try{history=await getJson('data/history.json');if(!Array.isArray(history))history=[];}catch(_){history=[];}mode='live';render(latest,history,false);}catch(err){mode='demo';render(demo,demoHistory,true);$('notice-text').textContent='未检测到可用的真实快照，正在展示明确标记的演示数据。运行采集脚本后可自动接入。';}finally{button.disabled=false;button.textContent='↻ 刷新';}}
+  $('reload').addEventListener('click',refresh);refresh();
+})();
+</script>
+</body>
+</html>

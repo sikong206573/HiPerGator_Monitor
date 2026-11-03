@@ -1,0 +1,7 @@
+QOSGrpMemLimit|qi855292.ucf
+QOSGrpMemLimit|qi855292.ucf
+QOSGrpMemLimit|qi855292.ucf
+QOSGrpMemLimit|qi855292.ucf
+Priority|qi855292.ucf-b
+Priority|qi855292.ucf-b
+Resources|qi855292.ucf-b

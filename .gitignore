@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+# These are generated from actual cluster observations; inspect before publishing.
+data/latest.json
+data/history.json
